@@ -1,138 +1,164 @@
-<!-- Product Modal -->
-<div x-data="productModal" 
-     x-show="open" 
-     x-cloak
-     class="fixed inset-0 z-50 overflow-y-auto"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0">
+@push('scripts')
+<script>
+console.log('Modal component loaded');
+
+// Define the openProductModal function immediately
+window.openProductModal = function(product) {
+    console.log('Opening modal with:', product);
     
-    <!-- Toast Notification -->
-    <div x-show="showToast" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform translate-y-0"
-         x-transition:leave-end="opacity-0 transform translate-y-2"
-         class="fixed top-4 right-4 bg-white text-black px-6 py-3 rounded-lg shadow-lg z-50">
-        <p x-text="toastMessage"></p>
-    </div>
-
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-75"></div>
-
-    <!-- Modal Content -->
-    <div class="relative min-h-screen flex items-center justify-center p-4">
-        <div class="relative bg-gray-900 rounded-lg max-w-4xl w-full overflow-hidden">
-            <!-- Close button -->
-            <button @click="open = false" class="absolute right-4 top-4 text-gray-400 hover:text-white">
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-
-            <div class="flex flex-col md:flex-row">
-                <!-- Product image -->
-                <div class="md:w-1/2 bg-white">
-                    <img :src="product && product.image_path" :alt="product && product.name" class="h-96 w-full object-contain md:h-full">
-                </div>
-
-                <!-- Product details -->
-                <div class="space-y-4 p-6 md:w-1/2">
-                    <h3 x-text="product && product.name" class="text-2xl font-bold text-white"></h3>
-                    <p x-text="product && product.description" class="text-gray-300"></p>
-                    <p class="text-xl font-bold text-white">
-                        <span x-text="product && new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(product.price)"></span>
-                    </p>
-                    
-                    <!-- Add to cart form -->
-                    <form @submit.prevent="addToCart" class="mt-6 space-y-4">
-                        <div class="flex items-center space-x-4">
-                            <label for="quantity" class="text-white">Quantidade:</label>
-                            <div class="flex items-center space-x-2">
-                                <button type="button" 
-                                        @click="quantity > 1 ? quantity-- : null"
-                                        class="h-8 w-8 rounded-full bg-gray-800 text-white hover:bg-gray-700">-</button>
-                                <input type="number" 
-                                       x-model="quantity" 
-                                       min="1" 
-                                       class="w-16 rounded bg-gray-800 px-2 py-1 text-center text-white"
-                                       readonly>
-                                <button type="button" 
-                                        @click="quantity++"
-                                        class="h-8 w-8 rounded-full bg-gray-800 text-white hover:bg-gray-700">+</button>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" 
-                                class="w-full rounded-lg bg-white px-4 py-2 font-bold text-black transition-all hover:bg-gray-100 hover:scale-105">
-                            Adicionar ao Carrinho
-                        </button>
-                    </form>
-                </div>
+    const modal = document.getElementById('productModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    
+    const content = document.getElementById('modalContent');
+    if (!content) {
+        console.error('Modal content element not found!');
+        return;
+    }
+    
+    // Create the content HTML
+    const html = `
+        <div style="display: flex; gap: 32px; flex-direction: row;">
+            <div style="width: 300px; height: 300px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: #f8f8f8; border-radius: 8px; padding: 16px;">
+                <img src="${product.image_path}" 
+                     alt="${product.name}" 
+                     style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
             </div>
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">
+                    ${product.name}
+                </h2>
+                <p style="margin-bottom: 20px;">
+                    ${product.description || ''}
+                </p>
+                <p style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">
+                    ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(product.price)}
+                </p>
+                <div style="margin-bottom: 20px;">
+                    <label>Quantidade:</label>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                        <button onclick="updateQuantity(-1)" style="width: 30px; height: 30px; background: black; color: white; border: none; border-radius: 50%; cursor: pointer;">-</button>
+                        <input type="number" id="quantity" value="1" min="1" style="width: 60px; text-align: center; border: 1px solid #ddd;" readonly>
+                        <button onclick="updateQuantity(1)" style="width: 30px; height: 30px; background: black; color: white; border: none; border-radius: 50%; cursor: pointer;">+</button>
+                    </div>
+                </div>
+                <button onclick="addToCart(${product.id})" 
+                        style="width: 100%; padding: 10px; background: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Adicionar ao Carrinho
+                </button>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+window.closeProductModal = function() {
+    const modal = document.getElementById('productModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+window.updateQuantity = function(change) {
+    const input = document.getElementById('quantity');
+    if (!input) {
+        console.error('Quantity input not found!');
+        return;
+    }
+    const newValue = parseInt(input.value) + change;
+    if (newValue >= 1) {
+        input.value = newValue;
+    }
+}
+
+window.addToCart = async function(productId) {
+    const input = document.getElementById('quantity');
+    if (!input) {
+        console.error('Quantity input not found!');
+        return;
+    }
+    const quantity = input.value;
+    
+    try {
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: parseInt(quantity)
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Update cart count if exists
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            cartCount.textContent = data.cart_count;
+        }
+        
+        closeProductModal();
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('productModal');
+    if (!modal) return;
+    
+    if (event.target === modal) {
+        closeProductModal();
+    }
+});
+
+// Debug initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Modal script loaded');
+    const modal = document.getElementById('productModal');
+    if (modal) {
+        console.log('Modal element found');
+    } else {
+        console.error('Modal element not found on page load');
+    }
+});
+</script>
+@endpush
+
+<!-- Product Modal -->
+<div id="productModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="background: white; max-width: 800px; margin: 50px auto; padding: 20px; border-radius: 8px; position: relative;">
+        <button onclick="closeProductModal()" 
+                style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 24px; cursor: pointer;">
+            ×
+        </button>
+        
+        <div id="modalContent">
+            <!-- Content will be injected here -->
         </div>
     </div>
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('productModal', () => ({
-            open: false,
-            product: null,
-            quantity: 1,
-            showToast: false,
-            toastMessage: '',
-            
-            async addToCart() {
-                if (!this.product) return;
-                
-                try {
-                    const response = await fetch('/cart/add', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            product_id: this.product.id,
-                            quantity: this.quantity
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    // Update cart count
-                    const cartCount = document.getElementById('cart-count');
-                    if (cartCount) {
-                        cartCount.textContent = data.cart_count;
-                    }
-                    
-                    // Close modal
-                    this.open = false;
-                    this.quantity = 1;
-                    
-                    // Show success message
-                    this.toastMessage = 'Produto adicionado ao carrinho';
-                    this.showToast = true;
-                    setTimeout(() => {
-                        this.showToast = false;
-                    }, 3000);
-                } catch (error) {
-                    console.error('Erro ao adicionar ao carrinho:', error);
-                    this.toastMessage = 'Erro ao adicionar ao carrinho';
-                    this.showToast = true;
-                    setTimeout(() => {
-                        this.showToast = false;
-                    }, 3000);
-                }
-            }
-        }));
-    });
-</script>
+@push('styles')
+<style>
+[x-cloak] {
+    display: none !important;
+}
+
+body {
+    background-color: white !important;
+}
+</style>
 @endpush 

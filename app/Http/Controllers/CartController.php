@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -33,30 +34,46 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cart = $this->getOrCreateCart();
-        $product = Product::findOrFail($request->product_id);
+        try {
+            DB::beginTransaction();
 
-        // Check if product is already in cart
-        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+            $cart = $this->getOrCreateCart();
+            $product = Product::findOrFail($request->product_id);
 
-        if ($cartItem) {
-            // Update quantity if product exists
-            $cartItem->update([
-                'quantity' => $cartItem->quantity + $request->quantity,
+            // Check if product is already in cart
+            $cartItem = $cart->items()->where('product_id', $product->id)->first();
+
+            if ($cartItem) {
+                // Update quantity if product exists
+                $cartItem->update([
+                    'quantity' => $cartItem->quantity + $request->quantity,
+                ]);
+            } else {
+                // Create new cart item
+                $cart->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $request->quantity,
+                    'price' => $product->price,
+                ]);
+            }
+
+            // Refresh cart to get updated totals
+            $cart->refresh();
+            
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Product added to cart successfully',
+                'cart_count' => $cart->items->sum('quantity')
             ]);
-        } else {
-            // Create new cart item
-            $cart->items()->create([
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'price' => $product->price,
-            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error adding to cart: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error adding to cart',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Produto adicionado ao carrinho',
-            'cart_count' => $cart->items->sum('quantity')
-        ]);
     }
 
     public function updateQuantity(Request $request, CartItem $cartItem)
@@ -65,27 +82,74 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cartItem->update([
-            'quantity' => $request->quantity,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Quantidade atualizada',
-            'subtotal' => number_format($cartItem->subtotal(), 2, ',', '.') . '€',
-            'total' => number_format($cartItem->cart->total(), 2, ',', '.') . '€',
-            'cart_count' => $cartItem->cart->items->sum('quantity')
-        ]);
+            // Get fresh price from product to ensure accuracy
+            $product = Product::findOrFail($cartItem->product_id);
+            
+            // Update the quantity and ensure price is current
+            $cartItem->update([
+                'quantity' => $request->quantity,
+                'price' => $product->price // Ensure we're using current price
+            ]);
+
+            // Refresh the cart and cart item to get updated totals
+            $cart = $cartItem->cart;
+            $cartItem->refresh();
+            $cart->refresh();
+
+            // Calculate new totals
+            $itemSubtotal = number_format($cartItem->subtotal(), 2, ',', '.');
+            $cartTotal = number_format($cart->total(), 2, ',', '.');
+            $cartCount = $cart->items->sum('quantity');
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Quantity updated successfully',
+                'subtotal' => $itemSubtotal . '€',
+                'total' => $cartTotal . '€',
+                'cart_count' => $cartCount
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating cart quantity: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error updating quantity',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function removeItem(CartItem $cartItem)
     {
-        $cart = $cartItem->cart;
-        $cartItem->delete();
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Produto removido do carrinho',
-            'total' => number_format($cart->total(), 2, ',', '.') . '€',
-            'cart_count' => $cart->items->sum('quantity')
-        ]);
+            $cart = $cartItem->cart;
+            $cartItem->delete();
+
+            // Refresh the cart to get updated totals
+            $cart->refresh();
+
+            $cartTotal = number_format($cart->total(), 2, ',', '.');
+            $cartCount = $cart->items->sum('quantity');
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Item removed successfully',
+                'total' => $cartTotal . '€',
+                'cart_count' => $cartCount
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error removing cart item: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error removing item',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -26,6 +26,17 @@ class CartItem extends Model
 
     public function subtotal(): float
     {
-        return $this->price * $this->quantity;
+        // Load fresh product data
+        $this->load('product');
+        
+        // Always use current product price
+        $currentPrice = $this->product->price;
+        
+        // Update stored price if different
+        if ($this->price != $currentPrice) {
+            $this->update(['price' => $currentPrice]);
+        }
+        
+        return $currentPrice * $this->quantity;
     }
 }

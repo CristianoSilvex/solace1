@@ -25,8 +25,17 @@ class Cart extends Model
 
     public function total(): float
     {
+        // Ensure we're using fresh data
+        $this->load('items.product');
+        
         return $this->items->sum(function ($item) {
-            return $item->price * $item->quantity;
+            // Always use the current product price
+            $currentPrice = $item->product->price;
+            // Update the cart item price if it's different
+            if ($item->price != $currentPrice) {
+                $item->update(['price' => $currentPrice]);
+            }
+            return $currentPrice * $item->quantity;
         });
     }
 }

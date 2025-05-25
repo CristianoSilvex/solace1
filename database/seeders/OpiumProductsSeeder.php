@@ -180,6 +180,15 @@ class OpiumProductsSeeder extends Seeder
                 'category_id' => $categoryMap['footwear']->id,
                 'is_available' => true,
                 'stock' => 8
+            ],
+            [
+                'name' => 'Calças Largas Rick Opium',
+                'description' => 'Calças largas em couro preto com design inspirado em Rick Owens, corte oversized e acabamento premium.',
+                'price' => 249.99,
+                'image_path' => 'midia/rickleatherbaggypants.jpg',
+                'category_id' => $categoryMap['bottoms']->id,
+                'is_available' => true,
+                'stock' => 15
             ]
         ];
 

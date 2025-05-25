@@ -1,10 +1,13 @@
-<header class="w-full fixed top-0 left-0 bg-white text-black py-4 px-8 shadow-[0_4px_20px_rgba(0,0,0,0.2)] z-50 flex justify-between items-center">
-    <h1 class="text-2xl font-semibold">Solace Collective</h1>
+<header class="w-full fixed top-0 left-0 bg-white text-black py-2 px-8 shadow-[0_4px_20px_rgba(0,0,0,0.2)] z-50 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+        <img src="{{ asset('midia/cross-teeth-logo.png') }}" alt="Solace Collective Logo" class="h-20 w-auto">
+        <h1 class="text-2xl font-semibold">Solace Collective</h1>
+    </div>
     <nav>
-        <ul class="flex space-x-6 items-center">
-            <li><a href="/" class="hover:text-gray-600 transition-colors">Inicio</a></li>
+        <ul class="flex space-x-8 items-center">
+            <li><a href="/" class="hover:text-gray-600 transition-colors">Início</a></li>
             <li><a href="{{ route('clothing') }}" class="hover:text-gray-600 transition-colors">Vestuário</a></li>
-            <li><a href="/about" class="hover:text-gray-600 transition-colors">Sobre nós</a></li>
+            <li><a href="/about" class="hover:text-gray-600 transition-colors">Sobre Nós</a></li>
             <li><a href="{{ route('contact') }}" class="hover:text-gray-600 transition-colors">Contactos</a></li>
             <li>
                 <a href="{{ route('cart.index') }}" class="text-black hover:text-gray-600 relative transition-colors">

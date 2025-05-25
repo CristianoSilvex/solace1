@@ -5,22 +5,32 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\HomeController;
+use App\Models\Cart;
 
 // Default home route
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Routes for authenticated users (Dashboard)
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+// Home route for post-login/register redirection
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+// Dashboard route
+Route::middleware(['auth'])->get('/dashboard', function () {
+    $cart = Cart::where('session_id', session()->getId())->first();
+    if ($cart && $cart->items()->count() > 0) {
+        return redirect()->route('checkout.show');
+    }
+    return view('dashboard');
+})->name('dashboard');
+
+// Checkout Routes (Protected)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'showCheckout'])->name('checkout.show');
+    Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+    Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
 });
 
 // About page route
@@ -46,12 +56,3 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
 Route::patch('/cart/items/{cartItem}/quantity', [CartController::class, 'updateQuantity'])->name('cart.update-quantity');
 Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeItem'])->name('cart.remove-item');
-
-// Newsletter Routes
-Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe');
-
-// Admin Newsletter Routes
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::get('/admin/newsletter', [NewsletterController::class, 'showDashboard'])->name('admin.newsletter');
-    Route::post('/admin/newsletter/send', [NewsletterController::class, 'sendNewsletter'])->name('admin.newsletter.send');
-});

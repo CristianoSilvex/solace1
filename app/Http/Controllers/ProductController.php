@@ -10,7 +10,9 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query()->with('category');
+        $query = Product::query()
+            ->with('category')
+            ->where('image_path', 'like', 'midia/%'); // Only get products with images in midia folder
 
         // Apply style filter
         if ($request->style && $request->style !== 'all') {

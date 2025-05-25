@@ -1,7 +1,7 @@
 <x-guest-layout>
     <x-header />
 
-    <div class="bg-white min-h-screen pt-24 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen pt-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div class="max-w-7xl mx-auto">
             <!-- Hero Section -->
             <div class="text-center mb-12">
@@ -58,21 +58,23 @@
             <!-- Products Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 @forelse ($products as $product)
-                    <div class="group" x-data="{ showQuickAdd: false }">
+                    <div class="group relative cursor-pointer transform transition-all duration-300 hover:scale-105"
+                         onclick="openProductModal({{ json_encode($product) }})">
                         <!-- Product Card -->
-                        <div style="width: 300px; height: 300px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 12px; overflow: hidden; margin-bottom: 1rem;">
-                            <img src="{{ asset($product->image_path) }}" 
-                                 alt="{{ $product->name }}" 
-                                 style="max-width: 100%; max-height: 100%; object-fit: contain; background: #fff;">
+                        <div class="w-full h-[300px] bg-white rounded-xl overflow-hidden shadow-md
+                                  transition-all duration-300
+                                  hover:shadow-[0_10px_40px_rgba(0,0,0,0.15)]
+                                  active:shadow-[0_5px_20px_rgba(0,0,0,0.1)]">
+                            <div class="w-full h-full flex items-center justify-center p-4">
+                                <img src="{{ asset($product->image_path) }}" 
+                                     alt="{{ $product->name }}" 
+                                     class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
+                            </div>
                         </div>
                         <!-- Product Info -->
-                        <div class="text-center">
-                            <h3 class="text-xl text-black font-semibold mb-2">{{ $product->name }}</h3>
-                            <p class="text-lg font-semibold text-black">{{ number_format($product->price, 2, ',', '.') }}€</p>
-                            <button @click="$dispatch('open-product-modal', @js($product))" 
-                                    class="text-gray-600 hover:text-black transition-colors duration-200">
-                                Ver Detalhes
-                            </button>
+                        <div class="text-center mt-4 transform transition-all duration-300 group-hover:translate-y-1">
+                            <h3 class="text-xl text-black font-semibold">{{ $product->name }}</h3>
+                            <p class="text-lg font-semibold text-black mt-1">{{ number_format($product->price, 2, ',', '.') }}€</p>
                         </div>
                     </div>
                 @empty
@@ -97,6 +99,9 @@
 
     @push('styles')
     <style>
+        [x-cloak] { 
+            display: none !important; 
+        }
         .pagination-container nav {
             display: flex;
             justify-content: center;
@@ -125,5 +130,18 @@
             border-radius: 0.5rem;
         }
     </style>
+    @endpush
+
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Page loaded');
+        if (typeof openProductModal === 'undefined') {
+            console.error('openProductModal is not defined!');
+        } else {
+            console.log('openProductModal is available');
+        }
+    });
+    </script>
     @endpush
 </x-guest-layout> 

@@ -2,10 +2,12 @@
     <x-header />
 
     <!-- Hero Section with See All Button -->
-    <div class="text-center mb-12 pt-24 max-w-4xl mx-auto px-4">
-        <h1 class="text-5xl font-extrabold mb-4 text-white tracking-wide">Explora as Nossas Coleções</h1>
-        <p class="text-xl text-white mb-8">Descobre estilos únicos que te definem</p>
-        <a href="{{ route('clothing') }}" class="inline-block px-8 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-900 transition-all transform hover:scale-105">
+    <div class="text-center mb-12 pt-24 max-w-7xl mx-auto px-4">
+        <div class="mb-16">
+            <img src="{{ asset('midia/solace-text-logo.png') }}" alt="Solace Collective" class="h-96 mx-auto">
+        </div>
+        <p class="text-2xl text-black mb-10">Descobre estilos únicos que te definem</p>
+        <a href="{{ route('clothing') }}" class="inline-block px-10 py-4 bg-black text-white text-xl font-bold rounded-lg hover:bg-gray-900 transition-all transform hover:scale-105">
             Ver Toda a Roupa
         </a>
     </div>
@@ -54,33 +56,6 @@
                     <h2 class="text-4xl font-bold text-white tracking-wider">USA Drip</h2>
                 </div>
             </a>
-        </div>
-    </div>
-
-    <!-- Newsletter Section -->
-    <div class="bg-gray-900 py-16 mt-12">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold tracking-tight text-white">Subscreva a nossa Newsletter</h2>
-                <p class="mt-4 text-lg text-white">Receba as últimas novidades e ofertas exclusivas.</p>
-                
-                @if (session('success'))
-                    <div class="mt-4 p-4 bg-green-500 text-white rounded-lg">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                <form action="{{ route('newsletter.subscribe') }}" method="POST" class="mt-8 flex max-w-md mx-auto gap-x-4">
-                    @csrf
-                    <input type="email" name="email" required 
-                           class="min-w-0 flex-auto rounded-lg border-0 bg-gray-800 px-3.5 py-2 text-white shadow-sm ring-1 ring-inset ring-gray-700 focus:ring-2 focus:ring-white" 
-                           placeholder="Introduza o seu email">
-                    <button type="submit" 
-                            class="rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-900 transition-all transform hover:scale-105">
-                        Subscrever
-                    </button>
-                </form>
-            </div>
         </div>
     </div>
 </x-guest-layout>

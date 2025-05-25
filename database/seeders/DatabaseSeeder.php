@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,18 +13,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Disable foreign key checks
+        Schema::disableForeignKeyConstraints();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
+        // Clear existing data
+        DB::table('products')->truncate();
+        DB::table('categories')->truncate();
+        
+        // First seed the categories
         $this->call([
             CategorySeeder::class,
-            ProductSeeder::class,
-            OpiumProductsSeeder::class,
-            GrungeProductsSeeder::class,
         ]);
+
+        // Then seed the products
+        $this->call([
+            GrungeProductsSeeder::class,
+            StreetWearProductsSeeder::class,
+            OpiumProductsSeeder::class,
+        ]);
+
+        // Re-enable foreign key checks
+        Schema::enableForeignKeyConstraints();
     }
 }
